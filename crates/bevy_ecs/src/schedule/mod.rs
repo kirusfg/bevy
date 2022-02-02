@@ -12,6 +12,7 @@ mod stage;
 mod state;
 mod system_container;
 mod system_descriptor;
+mod system_graph;
 mod system_set;
 
 pub use executor::*;
@@ -23,6 +24,7 @@ pub use stage::*;
 pub use state::*;
 pub use system_container::*;
 pub use system_descriptor::*;
+pub use system_graph::*;
 pub use system_set::*;
 
 use std::fmt::Debug;
@@ -247,7 +249,7 @@ impl Schedule {
     pub fn add_system_set_to_stage(
         &mut self,
         stage_label: impl StageLabel,
-        system_set: SystemSet,
+        system_set: impl Into<SystemSet>,
     ) -> &mut Self {
         self.stage(stage_label, |stage: &mut SystemStage| {
             stage.add_system_set(system_set)

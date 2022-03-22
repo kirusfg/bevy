@@ -13,7 +13,8 @@ use bevy_pbr::{
 };
 use bevy_render::{
     camera::{
-        Camera, Camera2d, Camera3d, CameraProjection, OrthographicProjection, PerspectiveProjection,
+        Camera, Camera3d, CameraProjection, OrthographicProjection, PerspectiveProjection,
+        ScalingMode,
     },
     color::Color,
     mesh::{Indices, Mesh, VertexAttributeValues},
@@ -612,14 +613,19 @@ fn load_node(
                     bottom: -ymag,
                     far: orthographic.zfar(),
                     near: orthographic.znear(),
+                    scaling_mode: ScalingMode::FixedHorizontal,
+                    scale: xmag,
                     ..Default::default()
                 };
 
                 node.insert(Camera {
                     projection_matrix: orthographic_projection.get_projection_matrix(),
+                    near: orthographic_projection.near,
+                    far: orthographic_projection.far,
                     ..Default::default()
                 });
-                node.insert(orthographic_projection).insert(Camera2d);
+                node.insert(orthographic_projection);
+                node.insert(Camera3d);
             }
             gltf::camera::Projection::Perspective(perspective) => {
                 let mut perspective_projection: PerspectiveProjection = PerspectiveProjection {

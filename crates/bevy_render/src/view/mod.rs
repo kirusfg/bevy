@@ -9,7 +9,7 @@ use wgpu::{
 pub use window::*;
 
 use crate::{
-    camera::ExtractedCamera,
+    camera::{ExtractedCamera, ExtractedCameras},
     prelude::Image,
     render_asset::RenderAssets,
     render_resource::{std140::AsStd140, DynamicUniformVec, Texture, TextureView},
@@ -179,9 +179,9 @@ fn prepare_view_targets(
     msaa: Res<Msaa>,
     render_device: Res<RenderDevice>,
     mut texture_cache: ResMut<TextureCache>,
-    cameras: Query<(Entity, &ExtractedCamera)>,
+    cameras: Res<ExtractedCameras>,
 ) {
-    for (entity, camera) in cameras.iter() {
+    for (entity, camera) in cameras.cameras {
         if let Some(size) = camera.physical_size {
             if let Some(texture_view) = camera.target.get_texture_view(&windows, &images) {
                 let sampled_target = if msaa.samples > 1 {

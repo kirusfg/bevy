@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, collections::HashMap};
 
 use crate::{
     camera::CameraProjection,
@@ -224,7 +224,7 @@ impl<T: Component + Default> Plugin for CameraTypePlugin<T> {
         app.init_resource::<ActiveCamera<T>>()
             .add_startup_system_to_stage(StartupStage::PostStartup, set_active_camera::<T>)
             .add_system_to_stage(CoreStage::PostUpdate, set_active_camera::<T>);
-        if let Ok(render_app) = app.get_sub_app_mut(RenderApp) {
+            if let Ok(render_app) = app.get_sub_app_mut(RenderApp) {
             render_app.add_system_to_stage(RenderStage::Extract, extract_cameras::<T>);
         }
     }
@@ -237,11 +237,6 @@ pub struct ActiveCamera<T: Component> {
     marker: PhantomData<T>,
 }
 
-impl<T: Component> Default for ActiveCamera<T> {
-    fn default() -> Self {
-        Self {
-            camera: Default::default(),
-            marker: Default::default(),
         }
     }
 }
@@ -291,28 +286,26 @@ pub fn extract_cameras<M: Component + Default>(
     windows: Res<Windows>,
     images: Res<Assets<Image>>,
     active_camera: Res<ActiveCamera<M>>,
-    query: Query<(&Camera, &GlobalTransform, &VisibleEntities), With<M>>,
+    query: Query<(Entity, &Camera, &GlobalTransform, &VisibleEntities), With<M>>,
 ) {
-    if let Some(entity) = active_camera.get() {
-        if let Ok((camera, transform, visible_entities)) = query.get(entity) {
-            if let Some(size) = camera.target.get_physical_size(&windows, &images) {
-                commands.get_or_spawn(entity).insert_bundle((
-                    ExtractedCamera {
-                        target: camera.target.clone(),
-                        physical_size: camera.target.get_physical_size(&windows, &images),
-                    },
-                    ExtractedView {
-                        projection: camera.projection_matrix,
-                        transform: *transform,
-                        width: size.x.max(1),
-                        height: size.y.max(1),
-                        near: camera.near,
-                        far: camera.far,
-                    },
-                    visible_entities.clone(),
-                    M::default(),
-                ));
-            }
+    for (entity, camera, transform, visible_entities) in query.iter() {
+        if let Some(size) = camera.target.get_physical_size(&windows, &images) {
+            commands.get_or_spawn(entity).insert_bundle((
+                ExtractedCamera {
+                    target: camera.target.clone(),
+                    physical_size: camera.target.get_physical_size(&windows, &images),
+                },
+                ExtractedView {
+                    projection: camera.projection_matrix,
+                    transform: *transform,
+                    width: size.x.max(1),
+                    height: size.y.max(1),
+                    near: camera.near,
+                    far: camera.far,
+                },
+                visible_entities.clone(),
+                M::default(),
+            ));
         }
     }
 
